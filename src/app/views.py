@@ -122,20 +122,11 @@ class GetRender(APIView):
                 height = 480
         else:
             raise ValueError(f"Invalid device type{device_type}")
-        cache_key = f"image_gallery_cache_key_{installation_id}_{width}_{height}"
-        cache_value = cache.get(key=cache_key)
-        image = io.BytesIO(cache_value) if cache_value else None
 
-        if not image:
-            image = requests.get(
-                url=f"https://picsum.photos/{width}/{height}/",
-                stream=True,
-            ).raw
-            cache.set(
-                key=cache_key,
-                value=image.read(),
-                timeout=30 * 60,
-            )
+        image = requests.get(
+            url=f"https://picsum.photos/{width}/{height}/",
+            stream=True,
+        ).raw
         return HttpResponse(image, content_type="application/octet-stream")
 
 
@@ -162,11 +153,12 @@ def authenticate_jwt(request) -> DecodedJWT:
     except KeyError:
         raise AuthenticationFailed("No http auth header")
     try:
-        decoded_token = jwt.decode(
-            signed_token,
-            os.environ["JWT_PUBLIC_KEY"].replace("\\n", "\n"),
-            algorithms=["RS256"],
-        )
+        with open("jwtRS256.key.pub") as key_file:
+            decoded_token = jwt.decode(
+                signed_token,
+                key_file.read(),
+                algorithms=["RS256"],
+            )
     except jwt.exceptions.ExpiredSignatureError:
         raise AuthenticationFailed("Token expired")
 

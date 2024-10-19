@@ -28,12 +28,12 @@ SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = LOCAL_DEV_MODE
 
-ALLOWED_HOSTS = ["*"] if LOCAL_DEV_MODE else ["image-gallery.invisible-computers.com"]
+ALLOWED_HOSTS = ["*"] if LOCAL_DEV_MODE else ["invisible-todolist.fly.dev"]
 
 CSRF_TRUSTED_ORIGINS = (
     ["https://*.localhost", "https://*.ngrok.io"]
     if LOCAL_DEV_MODE
-    else ["https://image-gallery.invisible-computers.com"]
+    else ["https://invisible-todolist.fly.dev"]
 )
 
 

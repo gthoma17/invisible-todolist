@@ -1,24 +1,31 @@
-FROM python:3.11
+ARG DJANGO_SECRET_KEY
+ARG PYTHON_VERSION=3.13-slim
+
+FROM python:${PYTHON_VERSION}
+
+ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
+# install psycopg2 dependencies.
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /home/docker/repo
-WORKDIR /home/docker/repo
+RUN mkdir -p /project
 
-# install dependencies
-RUN pip install "poetry==1.4.2"
-ADD ./pyproject.toml /home/docker/repo/pyproject.toml
-ADD ./poetry.lock /home/docker/repo/poetry.lock
-RUN poetry config virtualenvs.create false && poetry install --without dev --no-interaction --no-ansi  --no-root
+WORKDIR /project
 
-# create uwsgi group and user
-RUN groupadd -r uwsgi &&  useradd -r -g uwsgi uwsgi
-RUN chown -R uwsgi:uwsgi /home/docker/repo
+RUN pip install poetry
+COPY pyproject.toml poetry.lock /project/
+RUN poetry config virtualenvs.create false
+RUN poetry install --only main --no-root --no-interaction
+COPY . /project
 
+ENV SECRET_KEY "aKK3nKr9ON6VjobuhCVrZvQGLgQrqz9jIU07UQhIiHTGnnAfti"
+WORKDIR /project/src
+RUN python manage.py collectstatic --noinput
 
-# Mount code
-ADD . /home/docker/repo/
+EXPOSE 8000
 
-
-
-CMD /home/docker/repo/boot.sh
+CMD ["gunicorn","--bind",":8000","--workers","2","image_gallery.wsgi"]

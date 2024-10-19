@@ -4,3 +4,7 @@ deploy.sh
 delete_old_docker_images.py
 staticfiles
 .DS_Store
+jwt
+secrets
+src/jwtRS256.key
+src/jwtRS256.key.pub
