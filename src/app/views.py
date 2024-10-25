@@ -6,10 +6,10 @@ import secrets
 from typing import Any
 from uuid import UUID
 
+import base64
 import jwt
 import pytz
 import requests
-from django.core.cache import cache
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -153,10 +153,11 @@ def authenticate_jwt(request) -> DecodedJWT:
     except KeyError:
         raise AuthenticationFailed("No http auth header")
     try:
-        with open("jwtRS256.key.pub") as key_file:
-            decoded_token = jwt.decode(
+        # The key is in B64 because Fly secrets cannot contain new lines
+        decoded_public_key = base64.b64decode(os.environ.get('B64_JWT_PUBLIC_KEY'))
+        decoded_token = jwt.decode(
                 signed_token,
-                key_file.read(),
+                decoded_public_key,
                 algorithms=["RS256"],
             )
     except jwt.exceptions.ExpiredSignatureError:

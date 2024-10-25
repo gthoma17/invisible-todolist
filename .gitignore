@@ -6,5 +6,5 @@ staticfiles
 .DS_Store
 jwt
 secrets
-src/jwtRS256.key
-src/jwtRS256.key.pub
+src/local_jwtRSA256.key
+src/local_jwtRSA256.key.pub
