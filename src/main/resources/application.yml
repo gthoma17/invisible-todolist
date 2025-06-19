@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: invisible-todolist
+  
+  datasource:
+    url: ${DATABASE_URL:jdbc:h2:mem:testdb}
+    driver-class-name: ${DATABASE_DRIVER:org.h2.Driver}
+    username: ${DATABASE_USERNAME:sa}
+    password: ${DATABASE_PASSWORD:}
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: ${DATABASE_DIALECT:org.hibernate.dialect.H2Dialect}
+  
+  h2:
+    console:
+      enabled: true
+  
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: always
+
+server:
+  port: ${PORT:8080}
+
+app:
+  jwt:
+    public-key: ${B64_JWT_PUBLIC_KEY:}
+  developer-id: ${MY_DEVELOPER_ID:}
+
+logging:
+  level:
+    com.invisiblecomputers.imagegallery: INFO
+    org.springframework.security: DEBUG

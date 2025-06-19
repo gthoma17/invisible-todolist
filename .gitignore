@@ -8,3 +8,30 @@ jwt
 secrets
 src/local_jwtRSA256.key
 src/local_jwtRSA256.key.pub
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# IDE
+*.iml
+*.ipr
+*.iws
+
+# OS
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Spring Boot
+application-*.yml
+!application.yml
+!application-test.yml
