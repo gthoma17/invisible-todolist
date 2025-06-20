@@ -5,19 +5,22 @@ import com.invisiblecomputers.imagegallery.entity.AppInstallation
 import com.invisiblecomputers.imagegallery.repository.AppInstallationRepository
 import com.invisiblecomputers.imagegallery.service.AuthenticationService
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.web.server.ResponseStatusException
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.util.*
 
-@WebMvcTest(AuthController::class)
+@WebMvcTest(controllers = [AuthController::class], excludeAutoConfiguration = [SecurityAutoConfiguration::class])
 class AuthControllerTest {
     
     @Autowired
@@ -26,10 +29,10 @@ class AuthControllerTest {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
     
-    @MockBean
+    @MockkBean
     private lateinit var authenticationService: AuthenticationService
     
-    @MockBean
+    @MockkBean
     private lateinit var appInstallationRepository: AppInstallationRepository
     
     @Test
@@ -43,10 +46,8 @@ class AuthControllerTest {
         )
         val loginToken = "test-login-token"
         
-        whenever(authenticationService.authenticateJWT("Bearer valid-jwt"))
-            .thenReturn(decodedJWT)
-        whenever(authenticationService.generateLoginToken(installationId))
-            .thenReturn(loginToken)
+        every { authenticationService.authenticateJWT("Bearer valid-jwt") } returns decodedJWT
+        every { authenticationService.generateLoginToken(installationId) } returns loginToken
         
         // When & Then
         mockMvc.perform(
@@ -61,15 +62,14 @@ class AuthControllerTest {
     @Test
     fun `getLoginToken should return 401 when invalid JWT provided`() {
         // Given
-        whenever(authenticationService.authenticateJWT("Bearer invalid-jwt"))
-            .thenThrow(RuntimeException("Invalid JWT"))
+        every { authenticationService.authenticateJWT("Bearer invalid-jwt") } throws ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid JWT")
         
         // When & Then
         mockMvc.perform(
             get("/api/get-login-token")
                 .header("Authorization", "Bearer invalid-jwt")
         )
-            .andExpect(status().isInternalServerError)
+            .andExpect(status().isUnauthorized)
     }
     
     @Test
@@ -79,12 +79,9 @@ class AuthControllerTest {
         val loginToken = "valid-login-token"
         val deviceType = "BLACK_AND_WHITE_SCREEN_880X528"
         
-        whenever(authenticationService.authenticateLoginToken(loginToken))
-            .thenReturn(installationId)
-        whenever(appInstallationRepository.existsById(installationId))
-            .thenReturn(false)
-        whenever(appInstallationRepository.save(any<AppInstallation>()))
-            .thenReturn(AppInstallation(installationId = installationId))
+        every { authenticationService.authenticateLoginToken(loginToken) } returns installationId
+        every { appInstallationRepository.existsById(installationId) } returns false
+        every { appInstallationRepository.save(any()) } returns AppInstallation(installationId = installationId)
         
         // When & Then
         val result = mockMvc.perform(
@@ -108,10 +105,8 @@ class AuthControllerTest {
         val loginToken = "valid-login-token"
         val deviceType = "BLACK_AND_WHITE_SCREEN_880X528"
         
-        whenever(authenticationService.authenticateLoginToken(loginToken))
-            .thenReturn(installationId)
-        whenever(appInstallationRepository.existsById(installationId))
-            .thenReturn(true)
+        every { authenticationService.authenticateLoginToken(loginToken) } returns installationId
+        every { appInstallationRepository.existsById(installationId) } returns true
         
         // When & Then
         mockMvc.perform(

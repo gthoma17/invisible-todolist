@@ -5,9 +5,11 @@ import com.invisiblecomputers.imagegallery.repository.AppInstallationRepository
 import com.invisiblecomputers.imagegallery.service.AuthenticationService
 import com.invisiblecomputers.imagegallery.service.ImageService
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("/api")
@@ -38,7 +40,7 @@ class RenderController(
             "BLACK_AND_WHITE_SCREEN_800X480" -> {
                 if (installation.isVerticallyOriented) 480 to 800 else 800 to 480
             }
-            else -> throw IllegalArgumentException("Invalid device type: $deviceType")
+            else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid device type: $deviceType")
         }
         
         val imageStream = imageService.getRandomImage(width, height)

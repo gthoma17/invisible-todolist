@@ -5,12 +5,13 @@ import com.invisiblecomputers.imagegallery.entity.AppInstallation
 import com.invisiblecomputers.imagegallery.repository.AppInstallationRepository
 import com.invisiblecomputers.imagegallery.service.AuthenticationService
 import com.invisiblecomputers.imagegallery.service.ImageService
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
@@ -18,19 +19,19 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.io.ByteArrayInputStream
 import java.util.*
 
-@WebMvcTest(RenderController::class)
+@WebMvcTest(controllers = [RenderController::class], excludeAutoConfiguration = [SecurityAutoConfiguration::class])
 class RenderControllerTest {
     
     @Autowired
     private lateinit var mockMvc: MockMvc
     
-    @MockBean
+    @MockkBean
     private lateinit var authenticationService: AuthenticationService
     
-    @MockBean
+    @MockkBean
     private lateinit var appInstallationRepository: AppInstallationRepository
     
-    @MockBean
+    @MockkBean
     private lateinit var imageService: ImageService
     
     @Test
@@ -48,12 +49,9 @@ class RenderControllerTest {
         )
         val imageBytes = "fake-image-data".toByteArray()
         
-        whenever(authenticationService.authenticateJWT("Bearer valid-jwt"))
-            .thenReturn(decodedJWT)
-        whenever(appInstallationRepository.findById(installationId))
-            .thenReturn(Optional.of(installation))
-        whenever(imageService.getRandomImage(880, 528))
-            .thenReturn(ByteArrayInputStream(imageBytes))
+        every { authenticationService.authenticateJWT("Bearer valid-jwt") } returns decodedJWT
+        every { appInstallationRepository.findById(installationId) } returns Optional.of(installation)
+        every { imageService.getRandomImage(880, 528) } returns ByteArrayInputStream(imageBytes)
         
         // When & Then
         val result = mockMvc.perform(
@@ -83,12 +81,9 @@ class RenderControllerTest {
         )
         val imageBytes = "fake-image-data".toByteArray()
         
-        whenever(authenticationService.authenticateJWT("Bearer valid-jwt"))
-            .thenReturn(decodedJWT)
-        whenever(appInstallationRepository.findById(installationId))
-            .thenReturn(Optional.of(installation))
-        whenever(imageService.getRandomImage(528, 880))
-            .thenReturn(ByteArrayInputStream(imageBytes))
+        every { authenticationService.authenticateJWT("Bearer valid-jwt") } returns decodedJWT
+        every { appInstallationRepository.findById(installationId) } returns Optional.of(installation)
+        every { imageService.getRandomImage(528, 880) } returns ByteArrayInputStream(imageBytes)
         
         // When & Then
         mockMvc.perform(
@@ -115,12 +110,9 @@ class RenderControllerTest {
         )
         val imageBytes = "fake-image-data".toByteArray()
         
-        whenever(authenticationService.authenticateJWT("Bearer valid-jwt"))
-            .thenReturn(decodedJWT)
-        whenever(appInstallationRepository.findById(installationId))
-            .thenReturn(Optional.of(installation))
-        whenever(imageService.getRandomImage(800, 480))
-            .thenReturn(ByteArrayInputStream(imageBytes))
+        every { authenticationService.authenticateJWT("Bearer valid-jwt") } returns decodedJWT
+        every { appInstallationRepository.findById(installationId) } returns Optional.of(installation)
+        every { imageService.getRandomImage(800, 480) } returns ByteArrayInputStream(imageBytes)
         
         // When & Then
         mockMvc.perform(
@@ -144,14 +136,10 @@ class RenderControllerTest {
         val newInstallation = AppInstallation(installationId = installationId)
         val imageBytes = "fake-image-data".toByteArray()
         
-        whenever(authenticationService.authenticateJWT("Bearer valid-jwt"))
-            .thenReturn(decodedJWT)
-        whenever(appInstallationRepository.findById(installationId))
-            .thenReturn(Optional.empty())
-        whenever(appInstallationRepository.save(any<AppInstallation>()))
-            .thenReturn(newInstallation)
-        whenever(imageService.getRandomImage(880, 528))
-            .thenReturn(ByteArrayInputStream(imageBytes))
+        every { authenticationService.authenticateJWT("Bearer valid-jwt") } returns decodedJWT
+        every { appInstallationRepository.findById(installationId) } returns Optional.empty()
+        every { appInstallationRepository.save(any()) } returns newInstallation
+        every { imageService.getRandomImage(880, 528) } returns ByteArrayInputStream(imageBytes)
         
         // When & Then
         mockMvc.perform(
@@ -172,10 +160,8 @@ class RenderControllerTest {
             installationId = installationId
         )
         
-        whenever(authenticationService.authenticateJWT("Bearer valid-jwt"))
-            .thenReturn(decodedJWT)
-        whenever(appInstallationRepository.findById(installationId))
-            .thenReturn(Optional.of(AppInstallation(installationId = installationId)))
+        every { authenticationService.authenticateJWT("Bearer valid-jwt") } returns decodedJWT
+        every { appInstallationRepository.findById(installationId) } returns Optional.of(AppInstallation(installationId = installationId))
         
         // When & Then
         mockMvc.perform(
@@ -183,6 +169,6 @@ class RenderControllerTest {
                 .header("Authorization", "Bearer valid-jwt")
                 .param("device-type", "INVALID_DEVICE_TYPE")
         )
-            .andExpect(status().isInternalServerError)
+            .andExpect(status().isBadRequest)
     }
 }

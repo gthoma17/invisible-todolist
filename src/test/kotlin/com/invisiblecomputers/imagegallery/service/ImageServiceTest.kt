@@ -1,21 +1,17 @@
 package com.invisiblecomputers.imagegallery.service
 
+import io.mockk.every
+import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mock
-import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.*
 import org.springframework.web.client.RestTemplate
 import java.io.InputStream
 
-@ExtendWith(MockitoExtension::class)
 class ImageServiceTest {
     
-    @Mock
-    private lateinit var restTemplate: RestTemplate
+    private val restTemplate = mockk<RestTemplate>()
     
     private lateinit var imageService: ImageService
     
@@ -35,10 +31,12 @@ class ImageServiceTest {
         val height = 600
         val imageBytes = "fake-image-data".toByteArray()
         
-        whenever(restTemplate.getForObject(
-            "https://picsum.photos/$width/$height/",
-            ByteArray::class.java
-        )).thenReturn(imageBytes)
+        every {
+            restTemplate.getForObject(
+                "https://picsum.photos/$width/$height/",
+                ByteArray::class.java
+            )
+        } returns imageBytes
         
         // When
         val result: InputStream = imageService.getRandomImage(width, height)
@@ -53,10 +51,12 @@ class ImageServiceTest {
         val width = 800
         val height = 600
         
-        whenever(restTemplate.getForObject(
-            "https://picsum.photos/$width/$height/",
-            ByteArray::class.java
-        )).thenReturn(null)
+        every {
+            restTemplate.getForObject(
+                "https://picsum.photos/$width/$height/",
+                ByteArray::class.java
+            )
+        } returns null
         
         // When & Then
         assertThatThrownBy {
